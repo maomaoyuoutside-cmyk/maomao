@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>薪水小偷 - 带薪拉屎计算器</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* 金光闪闪加载动画 */
+        @keyframes shine {
+            0% { left: -100%; }
+            100% { left: 100%; }
+        }
+        @keyframes pulse-gold {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.1); opacity: 0.8; }
+        }
+        .gold-loading {
+            background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 50%, #d97706 100%);
+            position: relative;
+            overflow: hidden;
+        }
+        .gold-loading::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.6), transparent);
+            animation: shine 1.5s infinite;
+        }
+        .coin-spin {
+            animation: pulse-gold 1s infinite ease-in-out;
+        }
+        /* 弹窗动画 */
+        .modal-enter {
+            animation: modalShow 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        @keyframes modalShow {
+            from { transform: scale(0.9); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+    </style>
+</head>
+<body class="bg-amber-50 min-h-screen flex items-center justify-center p-4 font-sans text-gray-800">
+
+    <div class="max-w-md w-full bg-white rounded-3xl shadow-2xl overflow-hidden border-4 border-amber-200 relative">
+        
+        <div id="loading-overlay" class="hidden absolute inset-0 z-50 flex flex-col items-center justify-center gold-loading text-white">
+            <div class="text-6xl mb-4 coin-spin">💰</div>
+            <div class="text-2xl font-black tracking-widest">正在点屎成金...</div>
+            <div class="mt-2 text-amber-100 text-sm">正在计算此坨产物的商业价值</div>
+        </div>
+
+        <div id="quick-modal" class="hidden fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+            <div class="bg-white rounded-3xl w-full max-w-xs shadow-2xl overflow-hidden modal-enter border-4 border-amber-400">
+                <div class="bg-amber-400 p-4 text-center font-black text-amber-900">
+                    💩 汇报战果
+                </div>
+                <div class="p-6 space-y-4">
+                    <p class="text-center text-gray-600 font-bold text-sm">此番博弈，耗时几何？</p>
+                    <div class="relative">
+                        <input type="number" id="quick-minutes" value="15" class="w-full px-4 py-3 bg-amber-50 rounded-xl border-2 border-amber-200 focus:border-amber-500 focus:outline-none text-center text-2xl font-black text-amber-700">
+                        <span class="absolute right-4 top-4 text-gray-400 font-bold">分钟</span>
+                    </div>
+                    <div class="grid grid-cols-2 gap-2 text-xs">
+                        <button onclick="setMinutes(5)" class="py-2 bg-gray-100 hover:bg-amber-100 rounded-lg transition">⚡ 速战速决</button>
+                        <button onclick="setMinutes(15)" class="py-2 bg-gray-100 hover:bg-amber-100 rounded-lg transition">👌 正常发挥</button>
+                        <button onclick="setMinutes(30)" class="py-2 bg-gray-100 hover:bg-amber-100 rounded-lg transition">🧘 深度禅定</button>
+                        <button onclick="setMinutes(60)" class="py-2 bg-gray-100 hover:bg-amber-100 rounded-lg transition">🏆 陈年老便</button>
+                    </div>
+                    <div class="flex gap-2 pt-2">
+                        <button onclick="closeModal()" class="flex-1 py-3 bg-gray-200 text-gray-600 font-bold rounded-xl">算了吧</button>
+                        <button onclick="confirmQuickCalculate()" class="flex-1 py-3 bg-amber-500 text-white font-black rounded-xl shadow-lg shadow-amber-200">开始结算</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-amber-400 p-6 text-center">
+            <h1 class="text-2xl font-black text-amber-900 tracking-wider">💩 带薪拉屎计费器</h1>
+            <p class="text-amber-800 text-sm mt-1">开始赚钱吧</p>
+        </div>
+
+        <div class="p-8">
+            <div id="input-section" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-bold text-gray-600 mb-1">月薪 (元)</label>
+                    <input type="number" id="monthly-salary" placeholder="例如: 10000" class="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-amber-400 focus:outline-none transition">
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-bold text-gray-600 mb-1">月工作日 (天)</label>
+                        <input type="number" id="work-days" value="21.75" class="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-amber-400 focus:outline-none transition">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold text-gray-600 mb-1">日工时 (h)</label>
+                        <input type="number" id="work-hours" value="8" class="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-amber-400 focus:outline-none transition">
+                    </div>
+                </div>
+                
+                <div class="space-y-3 pt-2">
+                    <button onclick="startTimer()" class="w-full bg-amber-500 hover:bg-amber-600 text-white font-black py-4 rounded-2xl shadow-lg transform active:scale-95 transition text-xl">
+                        进入蹲坑模式 🚀
+                    </button>
+                    <button onclick="openModal()" class="w-full bg-white border-2 border-amber-500 text-amber-600 hover:bg-amber-50 font-black py-3 rounded-2xl transition text-sm">
+                        不计时，直接结算（我刚拉完）
+                    </button>
+                </div>
+            </div>
+
+            <div id="timer-section" class="hidden text-center space-y-6">
+                <div class="py-8">
+                    <div class="text-gray-500 text-sm font-bold uppercase tracking-widest">本次已收获</div>
+                    <div class="text-5xl font-black text-amber-600 my-2">
+                        ¥ <span id="money-counter">0.00</span>
+                    </div>
+                    <div class="text-gray-400 text-lg" id="time-display">00:00:00</div>
+                </div>
+                <div id="status-text" class="text-amber-700 font-medium italic">偷偷偷...</div>
+                <button onclick="stopTimer()" class="w-full bg-red-500 hover:bg-red-600 text-white font-black py-4 rounded-2xl shadow-lg transform active:scale-95 transition text-xl">
+                    擦屁股走人，好朋友拜拜🧻
+                </button>
+            </div>
+
+            <div id="result-section" class="hidden text-center space-y-6">
+                <div class="p-6 bg-amber-100 rounded-2xl border-2 border-dashed border-amber-400">
+                    <h2 class="text-xl font-bold text-amber-900">结算清单</h2>
+                    <p class="text-4xl font-black text-amber-600 my-4">¥ <span id="final-money">0.00</span></p>
+                    <p id="evaluation" class="text-gray-700 font-bold"></p>
+                </div>
+                <button onclick="resetAll()" class="w-full bg-gray-800 text-white font-black py-4 rounded-2xl shadow-lg transition text-xl">
+                    再来一局
+                </button>
+            </div>
+        </div>
+        
+        <div class="bg-gray-50 p-4 text-center text-xs text-gray-400">
+            温馨提示：蹲坑虽好，久坐伤身
+        </div>
+    </div>
+
+    <script>
+        let startTime;
+        let timerInterval;
+        let salaryPerSecond;
+
+        function getSalaryConfig() {
+            const salary = document.getElementById('monthly-salary').value;
+            const days = document.getElementById('work-days').value;
+            const hours = document.getElementById('work-hours').value;
+            if (!salary || salary <= 0) {
+                alert("同事，请先输入月薪，不然没法算呀！");
+                return null;
+            }
+            return { perSecond: salary / days / hours / 3600 };
+        }
+
+        function startTimer() {
+            const config = getSalaryConfig();
+            if (!config) return;
+            salaryPerSecond = config.perSecond;
+            document.getElementById('input-section').classList.add('hidden');
+            document.getElementById('timer-section').classList.remove('hidden');
+            startTime = Date.now();
+            timerInterval = setInterval(updateDisplay, 100);
+        }
+
+        function updateDisplay() {
+            const seconds = (Date.now() - startTime) / 1000;
+            const earned = (seconds * salaryPerSecond).toFixed(2);
+            document.getElementById('money-counter').innerText = earned;
+            const h = Math.floor(seconds / 3600).toString().padStart(2, '0');
+            const m = Math.floor((seconds % 3600) / 60).toString().padStart(2, '0');
+            const s = Math.floor(seconds % 60).toString().padStart(2, '0');
+            document.getElementById('time-display').innerText = `${h}:${m}:${s}`;
+            
+            const status = document.getElementById('status-text');
+            if(earned > 50) status.innerText = "你拉的不是屎，是公司的股份！";
+            else if(earned > 20) status.innerText = "HR正在提刀赶来的路上...";
+            else if(earned > 10) status.innerText = "这波不亏，一杯奶茶到手。";
+        }
+
+        function stopTimer() {
+            clearInterval(timerInterval);
+            showResult(document.getElementById('money-counter').innerText);
+        }
+
+        /* 弹窗控制逻辑 */
+        function openModal() {
+            if(!getSalaryConfig()) return;
+            document.getElementById('quick-modal').classList.remove('hidden');
+        }
+
+        function closeModal() {
+            document.getElementById('quick-modal').classList.add('hidden');
+        }
+
+        function setMinutes(val) {
+            document.getElementById('quick-minutes').value = val;
+        }
+
+        function confirmQuickCalculate() {
+            const config = getSalaryConfig();
+            const minutes = document.getElementById('quick-minutes').value;
+            const seconds = parseFloat(minutes) * 60;
+            const earned = (seconds * config.perSecond).toFixed(2);
+
+            closeModal();
+            document.getElementById('loading-overlay').classList.remove('hidden');
+
+            setTimeout(() => {
+                document.getElementById('loading-overlay').classList.add('hidden');
+                showResult(earned);
+            }, 2000);
+        }
+
+        function showResult(money) {
+            document.getElementById('input-section').classList.add('hidden');
+            document.getElementById('timer-section').classList.add('hidden');
+            document.getElementById('result-section').classList.remove('hidden');
+            document.getElementById('final-money').innerText = money;
+            
+            let evalText = "";
+            const earnedNum = parseFloat(money);
+            if (earnedNum < 1) evalText = "动作太快了，B司赚了。";
+            else if (earnedNum < 5) evalText = "普通的排泄，稳健的收益。";
+            else if (earnedNum < 20) evalText = "黄金矿工！今天的外卖有了。";
+            else evalText = "致富标兵！赢了。";
+            document.getElementById('evaluation').innerText = evalText;
+        }
+
+        function resetAll() {
+            document.getElementById('result-section').classList.add('hidden');
+            document.getElementById('input-section').classList.remove('hidden');
+            document.getElementById('money-counter').innerText = "0.00";
+        }
+    </script>
+</body>
+</html>
